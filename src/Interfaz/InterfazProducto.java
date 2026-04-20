@@ -5,12 +5,12 @@
 package Interfaz;
 
 import Conexion.ConexionDB;
-import DAO.ProductoDAO;
+import Controlador.ProductoControlador;
+//import DAO.ProductoDAO;
 import Modelo.Producto;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import javax.swing.JOptionPane;
-import java.sql.Statement;
 import java.sql.ResultSet;
 import javax.swing.table.DefaultTableModel;
 
@@ -19,6 +19,8 @@ import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 import java.io.FileOutputStream;
 
+import java.util.List;
+
 /**
  *
  * @author ACER
@@ -26,7 +28,8 @@ import java.io.FileOutputStream;
 public class InterfazProducto extends javax.swing.JFrame {
 
     Producto p = new Producto();
-    ProductoDAO dao = new ProductoDAO();
+    //ProductoDAO dao = new ProductoDAO();
+    ProductoControlador controlador = new ProductoControlador();
     int idProducto = 0;
 
     /**
@@ -45,22 +48,15 @@ public class InterfazProducto extends javax.swing.JFrame {
 
     /// metodo que nos ayudar a agregar registros a la base de datos
     public void agregar() {
-        try {
-            
+        p.setNombre(tfNombre.getText());
+        p.setCategoria(tfCategoria.getText());
+        p.setPrecio(Double.parseDouble(tfPrecio.getText()));
+        p.setCantidad(Integer.parseInt(tfCantidad.getText()));
 
-            p.setNombre(tfNombre.getText());
-            p.setCategoria(tfCategoria.getText());
-            p.setPrecio(Double.parseDouble(tfPrecio.getText()));
-            p.setCantidad(Integer.parseInt(tfCantidad.getText()));
-
-            dao.agregarProducto(p);
-            
+        if (controlador.guardarProducto(p)) {
+            JOptionPane.showMessageDialog(null, "Producto agregado");
             mostrarProductos();
             limpiar();
-            totalInventario();
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error: " + e);
         }
     }
 
@@ -78,77 +74,37 @@ public class InterfazProducto extends javax.swing.JFrame {
 
     //metodos que nos ayuda a mostrar registros en la base de datos
     public void mostrarProductos() {
-        try {
-            Connection con = ConexionDB.conectar();
+        DefaultTableModel modelo = (DefaultTableModel) tblProductos.getModel();
+        modelo.setRowCount(0);
 
-            String sql = "SELECT * FROM producto";
+        //List<Producto> lista = (List<Producto>) controlador.obtenerProductos();
 
-            Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery(sql);
-
-            DefaultTableModel modelo = (DefaultTableModel) tblProductos.getModel();
-            modelo.setRowCount(0);
-
-            while (rs.next()) {
-                Object[] fila = new Object[5];
-
-                int cantidad = rs.getInt("cantidad");
-
-                fila[0] = rs.getInt("id");
-                fila[1] = rs.getString("nombre");
-                fila[2] = rs.getString("categoria");
-                fila[3] = rs.getDouble("precio");
-                fila[4] = cantidad;
-
-                modelo.addRow(fila);
-
-            }
-            if (rs != null) {
-                rs.close();
-            }
-            if (st != null) {
-                st.close();
-            }
-            if (con != null) {
-                con.close();
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error mostrar: " + e);
+        for (Producto p : controlador.obtenerProductos()) {
+            modelo.addRow(new Object[]{
+                p.getId(),
+                p.getNombre(),
+                p.getCategoria(),
+                p.getPrecio(),
+                p.getCantidad()
+            });
         }
     }
 
     public void actualizar() {
-        try {
-            Connection con = ConexionDB.conectar();
 
-            String sql = "UPDATE producto SET nombre=?, categoria=?, precio=?, cantidad=? WHERE id=?";
+        p.setNombre(tfNombre.getText());
+        p.setCategoria(tfCategoria.getText());
+        p.setPrecio(Double.parseDouble(tfPrecio.getText()));
+        p.setCantidad(Integer.parseInt(tfCantidad.getText()));
+        p.setId(idProducto);
 
-            PreparedStatement ps = con.prepareStatement(sql);
+        controlador.actualizarProducto(p);
 
-            ps.setString(1, tfNombre.getText());
-            ps.setString(2, tfCategoria.getText());
-            ps.setDouble(3, Double.parseDouble(tfPrecio.getText()));
-            ps.setInt(4, Integer.parseInt(tfCantidad.getText()));
-            ps.setInt(5, idProducto);
+        JOptionPane.showMessageDialog(null, "Producto actualizado");
 
-            ps.executeUpdate();
-
-            JOptionPane.showMessageDialog(null, "Producto actualizado");
-
-            mostrarProductos();
-            limpiar();
-            totalInventario();
-
-            if (ps != null) {
-                ps.close();
-            }
-            if (con != null) {
-                con.close();
-            }
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error actualizar: " + e);
-        }
+        mostrarProductos();
+        limpiar();
+        totalInventario();
     }
 
     public void eliminar() {
@@ -157,33 +113,13 @@ public class InterfazProducto extends javax.swing.JFrame {
             return;
         }
 
-        try {
-            Connection con = ConexionDB.conectar();
+        controlador.eliminarProducto(idProducto);
 
-            String sql = "DELETE FROM producto WHERE id=?";
+        JOptionPane.showMessageDialog(null, "Producto eliminado");
 
-            PreparedStatement ps = con.prepareStatement(sql);
-
-            ps.setInt(1, idProducto);
-
-            ps.executeUpdate();
-
-            JOptionPane.showMessageDialog(null, "Producto eliminado");
-
-            mostrarProductos();
-            limpiar();
-            totalInventario();
-
-            if (ps != null) {
-                ps.close();
-            }
-            if (con != null) {
-                con.close();
-            }
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error eliminar: " + e);
-        }
+        mostrarProductos();
+        limpiar();
+        totalInventario();
     }
 
     public void buscar(String valor) {
@@ -507,7 +443,6 @@ public class InterfazProducto extends javax.swing.JFrame {
     private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarActionPerformed
         // TODO add your handling code here:
         this.agregar();
-        //dao.agregarProducto();
     }//GEN-LAST:event_btnAgregarActionPerformed
 
     private void LimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LimpiarActionPerformed

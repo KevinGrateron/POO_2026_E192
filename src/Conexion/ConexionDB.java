@@ -17,7 +17,7 @@ public class ConexionDB {
         Connection  con = null;
         try{
             con = DriverManager.getConnection("jdbc:sqlite:C:/Users/ACER/Documents/inventario.db");
-            System.out.println("Conexión exitosa");
+            //System.out.println("Conexión exitosa");
         }catch (SQLException e) {
             System.out.println("Error conexión: " + e.getMessage());
         }
