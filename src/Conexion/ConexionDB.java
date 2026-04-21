@@ -21,7 +21,7 @@ public class ConexionDB {
         }catch (SQLException e) {
             System.out.println("Error conexión: " + e.getMessage());
             System.out.println("Texto de Prueba grateron  gaste la papa");
-            System.out.println("tengo hambre");            
+            System.out.println("tengo hambre, vamosnos");            
         }
         return con;
     }
